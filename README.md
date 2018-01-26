@@ -3,11 +3,11 @@ Try to realize the auto encoder structure with Residual Network (ResNet) by the 
 
 ## Which techs will be embedded in the network?
 Some tricks will be applied for better training the network to avoiding over-fitting, accelerating convergence to local optima, etc. 
-- [ReLU activation function](https://en.wikipedia.org/wiki/Rectifier_(neural_networks)
+- [ReLU activation function](https://en.wikipedia.org/wiki/Rectifier_\(neural_networks\))
 - [Batch normalization](http://blog.mazhixian.me/2018/01/23/batch-normalization-with-tensorflow/)
 - [Exponential decreacing learning rate](http://blog.mazhixian.me/2018/01/19/adjustable-learning-rate-for-deep-learning-by-tensorflow/)
-- [Dropout](https://en.wikipedia.org/wiki/Dropout_(neural_networks)
-- [Regularization](https://en.wikipedia.org/wiki/Regularization_(mathematics)
+- [Dropout](https://en.wikipedia.org/wiki/Dropout_\(neural_networks\))
+- [Regularization](https://en.wikipedia.org/wiki/Regularization_\(mathematics\))
 
 ## Construction of the ResAE
 Firstly the bottleneck structure, the basis of the ResNet, is realized. Then the block class is built, composed of multiple bottlenecks. By means of them, finally the ResNet based encoding part can be constructed. As for the decoder part, which is conventionally as the mirror as the encoder. A diagram is illustrated as follow, which is similar to the famous [skip connection](https://arxiv.org/abs/1606.08921)
