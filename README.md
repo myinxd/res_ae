@@ -13,7 +13,7 @@ Some tricks will be applied for better training the network to avoiding over-fit
 Firstly the bottleneck structure, the basis of the ResNet, is realized. Then the block class is built, composed of multiple bottlenecks. By means of them, finally the ResNet based encoding part can be constructed. As for the decoder part, which is conventionally as the mirror as the encoder. A diagram is illustrated as follow, which is similar to the famous [skip connection](https://arxiv.org/abs/1606.08921)
 
 <center>
-<img src="https://github.com/myinxd/res_ae/blob/master/images/fig_diagram.png?raw=true" height=60 width=360>
+<img src="https://github.com/myinxd/res_ae/blob/master/images/fig_diagram.png?raw=true" height=100 width=800>
 </center>
 
 
