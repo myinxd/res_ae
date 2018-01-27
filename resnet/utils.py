@@ -55,6 +55,9 @@ def get_batch_norm(inputs,is_training,scope=None):
     return bn_out
 
 def get_block(resnet_classic_param, encode_flag=True, is_training=None):
+=======
+def get_block(resnet_classic_param,is_training=None):
+>>>>>>> a06b4c4b378e6b08ee421cd121607e7104ea7073
     """Generate block parameters according to the
        classic list like structure.
 
@@ -62,8 +65,11 @@ def get_block(resnet_classic_param, encode_flag=True, is_training=None):
     =====
     resnet_classic_param: list
         a list composed of bottleneck configuration
+<<<<<<< HEAD
     encode_flag: bool
         It true, encoder blosk; if false, decoder block
+=======
+>>>>>>> a06b4c4b378e6b08ee421cd121607e7104ea7073
     is_training: tf.placeholder
         a placeholder for batch_normalization
 
@@ -75,6 +81,7 @@ def get_block(resnet_classic_param, encode_flag=True, is_training=None):
     block_params = []
     bottle_conf = namedtuple(
         'bottle_conf',
+<<<<<<< HEAD
         ['depth3','depth1','stride'])
 
     if encode_flag:
@@ -105,5 +112,22 @@ def get_block(resnet_classic_param, encode_flag=True, is_training=None):
             bottle_params.append(
                 ((1, 1, bottle.depth1), 1, True, 'SAME', tf.nn.relu))
             block_params.append(bottle_params)
+=======
+        ['depth3','depth1','stride']
+    )
+    for bottle in resnet_classic_param:
+        bottle = bottle_conf._make(bottle)
+        bottle_params = []
+        # layer 1
+        bottle_params.append(
+            ((1, 1, bottle.depth1), 1, False,'SAME', tf.nn.relu))
+        # layer 2
+        bottle_params.append(
+            ((3, 3, bottle.depth1), bottle.stride, False, 'SAME', tf.nn.relu))
+        # layer 3
+        bottle_params.append(
+            ((1, 1, bottle.depth3), 1, False, 'SAME', tf.nn.relu))
+        block_params.append(bottle_params)
+>>>>>>> a06b4c4b378e6b08ee421cd121607e7104ea7073
 
     return block_params
