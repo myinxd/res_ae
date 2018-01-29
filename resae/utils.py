@@ -97,13 +97,86 @@ def get_block(resnet_classic_param, encode_flag=True, is_training=None):
             bottle_params = []
             # layer 1
             bottle_params.append(
-                ((1, 1, bottle.depth3), 1, False,'SAME', tf.nn.relu))
+                ((1, 1, bottle.depth1), 1, False,'SAME', tf.nn.relu))
             # layer 2
             bottle_params.append(
                 ((3, 3, bottle.depth1), bottle.stride, False, 'SAME', tf.nn.relu))
             # layer 3
-            bottle_params.append(
-                ((1, 1, bottle.depth1), 1, False, 'SAME', tf.nn.relu))
+            if bottle.stride > 1:
+                # Batch_norm
+                bottle_params.append(
+                    ((1, 1, bottle.depth3), 1, True, 'SAME', tf.nn.relu))
+            else:
+                bottle_params.append(
+                    ((1, 1, bottle.depth3), 1, False, 'SAME', tf.nn.relu))
             block_params.append(bottle_params)
 
     return block_params
+
+def gen_validation(data, valrate = 0.2, label=None):
+    """Separate the dataset into training and validation subsets.
+
+    inputs
+    ======
+    data: np.ndarray
+        The input data, 4D matrix
+    label: np.ndarray or list, opt
+        The labels w.r.t. input data, optional
+
+    outputs
+    =======
+    data_train: {"data": , "label": }
+    data_val: {"data":, "label":}
+    """
+    if label is None:
+        label_train = None
+        label_val = None
+        idx = np.random.permutation(len(data))
+        num_val = int(len(data)*valrate)
+        data_val = {"data": data[idx[0:num_val],:,:,:],
+                    "label": label_val}
+        # train
+        data_train = {"data": data[idx[num_val:],:,:,:],
+                      "label": label_train}
+    else:
+        # Training and validation
+        idx = np.random.permutation(len(data))
+        num_val = int(len(data)* valrate)
+        data_val = {"data": data[idx[0:num_val],:,:,:],
+                    "label": label[idx[0:num_val],:]}
+        # train
+        data_train = {"data": data[idx[num_val:],:,:,:],
+                      "label": label[idx[num_val:],:]}
+
+    return data_train,data_val
+
+def gen_BatchIterator(data, batch_size=100, shuffle=True):
+    """
+    Return the next 'batch_size' examples
+    from the X_in dataset
+
+    Reference
+    =========
+    [1] tensorflow.examples.tutorial.mnist.input_data.next_batch
+    Input
+    =====
+    data: 4d np.ndarray
+        The samples to be batched
+    batch_size: int
+        Size of a single batch.
+    shuffle: bool
+        Whether shuffle the indices.
+
+    Output
+    ======
+    Yield a batch generator
+    """
+    if shuffle:
+        indices = np.arange(len(data))
+        np.random.shuffle(indices)
+    for start_idx in range(0, len(data) - batch_size + 1, batch_size):
+        if shuffle:
+            excerpt = indices[start_idx: start_idx + batch_size]
+        else:
+            excerpt = slice(start_idx, start_idx + batch_size)
+        yield data[excerpt]

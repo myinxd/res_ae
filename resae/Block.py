@@ -44,6 +44,7 @@ class Block():
                  encode_flag=True,
                  scope=None,
                  summary_flag=False,
+                 odd_flags=None
                  ):
         """
         The initializer
@@ -53,6 +54,7 @@ class Block():
         self.is_training = is_training
         self.encode_flag = encode_flag
         self.summary_flag = summary_flag
+        self.odd_flags = odd_flags
         if scope is None:
             self.scope = 'block' + str(np.random.randint(100))
         else:
@@ -62,9 +64,10 @@ class Block():
         """Get the blocks"""
         with tf.name_scope(self.scope):
             input_now = self.inputs
-            for i, bottle_params in enumerate(self.block_params):
-                # Init bottleneck
-                if self.encode_flag:
+            if self.encode_flag:
+                odd_flags = []
+                for i, bottle_params in enumerate(self.block_params):
+                    # Init bottleneck
                     bottleneck = Bottleneck_en(
                         inputs=input_now,
                         bottle_params=bottle_params,
@@ -72,19 +75,26 @@ class Block():
                         scope=self.scope+'/bottleneck_en' + str(i),
                         summary_flag=self.summary_flag
                         )
-                else:
+                    input_now, odd = bottleneck.get_bottlenet()
+                    odd_flags.append(odd)
+                    print(input_now.get_shape())
+                # Add summary
+                if self.summary_flag:
+                    tf.summary.histogram('block_output', input_now)
+                return input_now, odd_flags
+            else:
+                for i, bottle_params in enumerate(self.block_params):
                     bottleneck = Bottleneck_de(
                         inputs=input_now,
                         bottle_params=bottle_params,
                         is_training=self.is_training,
                         scope=self.scope+'/bottleneck_de' + str(i),
-                        summary_flag=self.summary_flag
+                        summary_flag=self.summary_flag,
+                        odd_flag=self.odd_flags[i]
                         )
-
-                input_now = bottleneck.get_bottlenet()
-            # Add summary
-            if self.summary_flag:
-                tf.summary.histogram('block_output', input_now)
-
-        output = input_now
-        return output
+                    input_now = bottleneck.get_bottlenet()
+                    print(input_now.get_shape())
+                # Add summary
+                if self.summary_flag:
+                    tf.summary.histogram('block_output', input_now)
+                return input_now

@@ -4,6 +4,7 @@
 updates
 =======
 [2018-01-26]: Init, summary todo.
+[2018-01-28]: Add odd_flag
 
 notes
 =====
@@ -112,7 +113,7 @@ class Bottleneck_en():
                 normalizer_fn=None,
                 activation_fn=None,
                 scope=scope)
-
+        
 
     def get_bottlenet(self):
         """Form the network"""
@@ -140,10 +141,16 @@ class Bottleneck_en():
                         with tf.name_scope('activate'):
                             residual = kernel.act_fn(residual)
                     input_now = residual
+                    print(i, " ", residual.get_shape())
             # add shortcut
             self.get_shortcut(self.stride,scope=self.scope+'_shortcut')
             residual = residual + self.shortcut
             if self.summary_flag:
                 tf.summary.histogram('bottle_residual', residual)
 
-        return residual
+            if residual.get_shape()[1] % 2 == 0:
+                odd_flag = False
+            else:
+                odd_flag = True
+
+        return residual, odd_flag
