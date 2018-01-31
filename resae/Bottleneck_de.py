@@ -147,7 +147,7 @@ class Bottleneck_de():
         with tf.name_scope(self.scope):
             input_now = self.inputs
             for i, kernel in enumerate(self.bottle_params):
-                with tf.name_scope('bottle_sub'+str('i')):
+                with tf.name_scope('bottle_sub_'+str(i)):
                     kernel = bottlelayer._make(kernel)
                     with tf.name_scope('conv2d_transpose'):
                         residual = conv2d_transpose(
