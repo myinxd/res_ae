@@ -121,7 +121,7 @@ class Bottleneck_de():
                     if odd_flag:
                         up = up[:,0:-1,0:-1,:]
                     return up
-                    
+
 
         if self.depth_in == self.depth_out:
             self.shortcut = upsample(self.inputs, stride, scope, self.odd_flag)
@@ -137,7 +137,7 @@ class Bottleneck_de():
                 scope=scope)
             if self.odd_flag:
                 self.shortcut = self.shortcut[:,0:-1,0:-1,:]
-           
+
 
     def get_bottlenet(self):
         """Form the network"""
@@ -169,9 +169,9 @@ class Bottleneck_de():
                     print(i, " ", residual.get_shape())
         # add shortcut
         self.get_shortcut(self.stride,scope=self.scope+'_shortcut')
-        print("shortcut ", self.shortcut.get_shape())
+        # print("shortcut ", self.shortcut.get_shape())
         residual = residual + self.shortcut
         if self.summary_flag:
             tf.summary.histogram('bottle_residual', residual)
-        
+
         return residual

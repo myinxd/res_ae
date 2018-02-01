@@ -54,6 +54,129 @@ def get_batch_norm(inputs,is_training,scope=None):
         )
     return bn_out
 
+def get_block_en(resnet_classic_param, is_training=None):
+    """Generate encoder block parameters according to the
+       classic list like structure.
+
+    input
+    =====
+    resnet_classic_param: list
+        a list composed of bottleneck configuration
+    is_training: tf.placeholder
+        a placeholder for batch_normalization
+
+    output
+    ======
+    block_params: list
+        block parameters generated for class Block
+    """
+    block_params = []
+    bottle_conf = namedtuple(
+        'bottle_conf',
+        ['depth3','depth1','stride'])
+
+    for i, bottle in enumerate(resnet_classic_param):
+        bottle = bottle_conf._make(bottle)
+        bottle_params = []
+        # layer 1
+        bottle_params.append(
+            ((1, 1, bottle.depth1), 1, False,'SAME', tf.nn.relu))
+        # layer 2
+        bottle_params.append(
+            ((3, 3, bottle.depth1), bottle.stride, False, 'SAME', tf.nn.relu))
+        # layer 3
+        if i == len(resnet_classic_param):
+            bottle_params.append(
+                ((1, 1, bottle.depth3), 1, True, 'SAME', tf.nn.relu))
+        else:
+            bottle_params.append(
+                ((1, 1, bottle.depth3), 1, False, 'SAME', tf.nn.relu))
+
+        block_params.append(bottle_params)
+
+    return block_params
+
+def get_block_list(blocks_params, input_depth):
+    """Transfer the blocks parameters into list"""
+    block_list = [input_depth]
+    block_stride = []
+    for block in blocks_params:
+        for bottle in block:
+            bottle_in = bottle[1]
+            bottle_out = bottle[0]
+            bottle_stride = bottle[2]
+            block_list.append(bottle_in)
+            block_list.append(bottle_in)
+            block_list.append(bottle_out)
+            block_stride.append(bottle_stride)
+
+    return block_list, block_stride
+
+def get_block_de_params(block_list, block_stride):
+    """Generate decoder block paramters from reversed encoder block list"""
+    blocks_de = []
+    # reverse
+    block_list = block_list[0:-1]
+    block_list.reverse()
+    num_bottles = len(block_list) // 3
+    block_stride.reverse()
+    # Whether 3x
+    if num_bottles != len(block_stride):
+        print("Number of bottles should be equal to number of strides, please check...")
+        return None
+    else:
+        block = []
+        for i in range(num_bottles):
+            bottle = [(block_list[i*3+2], block_list[i*3+0], block_stride[i])]
+            block += bottle
+            if i + 1 == num_bottles or block_stride[i+1] > 1: # or 的判断有先后顺序
+                blocks_de.append(block)
+                block = []
+
+    return blocks_de
+
+def get_block_de(resnet_classic_param, is_training=None):
+    """Generate decoder block parameters according to the
+       classic list like structure.
+
+    input
+    =====
+    resnet_classic_param: list
+        a list composed of bottleneck configuration
+    is_training: tf.placeholder
+        a placeholder for batch_normalization
+
+    output
+    ======
+    block_params: list
+        block parameters generated for class Block
+    """
+    block_params = []
+    bottle_conf = namedtuple(
+        'bottle_conf',
+        ['depth3','depth1','stride'])
+
+    for i, bottle in enumerate(resnet_classic_param):
+        bottle = bottle_conf._make(bottle)
+        bottle_params = []
+        # layer 1
+        bottle_params.append(
+            ((1, 1, bottle.depth1), 1, False,'SAME', tf.nn.relu))
+        # layer 2
+        bottle_params.append(
+            ((3, 3, bottle.depth1), bottle.stride, False, 'SAME', tf.nn.relu))
+        # layer 3
+        if i == len(resnet_classic_param):
+            # Batch_norm
+            bottle_params.append(
+                ((1, 1, bottle.depth3), 1, True, 'SAME', tf.nn.relu))
+        else:
+            bottle_params.append(
+                ((1, 1, bottle.depth3), 1, False, 'SAME', tf.nn.relu))
+        block_params.append(bottle_params)
+
+    return block_params
+
 def get_block(resnet_classic_param, encode_flag=True, is_training=None):
     """Generate block parameters according to the
        classic list like structure.
@@ -78,7 +201,7 @@ def get_block(resnet_classic_param, encode_flag=True, is_training=None):
         ['depth3','depth1','stride'])
 
     if encode_flag:
-        for bottle in resnet_classic_param:
+        for i, bottle in enumerate(resnet_classic_param):
             bottle = bottle_conf._make(bottle)
             bottle_params = []
             # layer 1
@@ -88,11 +211,16 @@ def get_block(resnet_classic_param, encode_flag=True, is_training=None):
             bottle_params.append(
                 ((3, 3, bottle.depth1), bottle.stride, False, 'SAME', tf.nn.relu))
             # layer 3
-            bottle_params.append(
-                ((1, 1, bottle.depth3), 1, False, 'SAME', tf.nn.relu))
+            if i == len(resnet_classic_param):
+                bottle_params.append(
+                    ((1, 1, bottle.depth3), 1, True, 'SAME', tf.nn.relu))
+            else:
+                bottle_params.append(
+                    ((1, 1, bottle.depth3), 1, False, 'SAME', tf.nn.relu))
+
             block_params.append(bottle_params)
     else:
-        for bottle in resnet_classic_param:
+        for i, bottle in enumerate(resnet_classic_param):
             bottle = bottle_conf._make(bottle)
             bottle_params = []
             # layer 1
@@ -102,7 +230,7 @@ def get_block(resnet_classic_param, encode_flag=True, is_training=None):
             bottle_params.append(
                 ((3, 3, bottle.depth1), bottle.stride, False, 'SAME', tf.nn.relu))
             # layer 3
-            if bottle.stride > 1:
+            if i == len(resnet_classic_param):
                 # Batch_norm
                 bottle_params.append(
                     ((1, 1, bottle.depth3), 1, True, 'SAME', tf.nn.relu))
@@ -112,6 +240,23 @@ def get_block(resnet_classic_param, encode_flag=True, is_training=None):
             block_params.append(bottle_params)
 
     return block_params
+
+def get_odd_flags(odd_flags, blocks, flag_input=False):
+    """Reverse the odd_flag list from the encoder"""
+    odd_list = [flag_input]
+    for odd_block in odd_flags:
+        odd_list += odd_block
+    # reverse
+    odd_list.reverse()
+    odd_de = blocks.copy()
+    i = 0
+    for m, odd_block in enumerate(odd_de):
+        odd_de[m] = blocks[m].copy()
+        for n, bottle in enumerate(odd_block):
+            odd_de[m][n] = odd_list[i+1]
+            i += 1
+
+    return odd_de
 
 def gen_validation(data, valrate = 0.2, label=None):
     """Separate the dataset into training and validation subsets.

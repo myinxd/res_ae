@@ -113,7 +113,7 @@ class Bottleneck_en():
                 normalizer_fn=None,
                 activation_fn=None,
                 scope=scope)
-        
+
 
     def get_bottlenet(self):
         """Form the network"""
@@ -141,7 +141,7 @@ class Bottleneck_en():
                         with tf.name_scope('activate'):
                             residual = kernel.act_fn(residual)
                     input_now = residual
-                    print(i, " ", residual.get_shape())
+                    # print(i, " ", residual.get_shape())
             # add shortcut
             self.get_shortcut(self.stride,scope=self.scope+'_shortcut')
             residual = residual + self.shortcut
