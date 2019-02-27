@@ -122,6 +122,7 @@ class Bottleneck_en():
                               ['kernel_shape','stride','bn_flag','padding','act_fn'])
         with tf.name_scope(self.scope):
             input_now = self.inputs
+            #print("bottle_net:", type(input_now), input_now)
             for i, kernel in enumerate(self.bottle_params):
                 with tf.name_scope('bottle_sub'+str('i')):
                     kernel = bottlelayer._make(kernel)
