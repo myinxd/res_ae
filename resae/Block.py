@@ -65,7 +65,10 @@ class Block():
         with tf.name_scope(self.scope):
             input_now = self.inputs
             if self.encode_flag:
-                odd_flags = []
+                if self.odd_flags is None:
+                    odd_flags = []
+                else:
+                    odd_flags = self.odd_flags
                 for i, bottle_params in enumerate(self.block_params):
                     # Init bottleneck
                     bottleneck = Bottleneck_en(
@@ -77,7 +80,7 @@ class Block():
                         )
                     input_now, odd = bottleneck.get_bottlenet()
                     odd_flags.append(odd)
-                    print(input_now.get_shape())
+
                 # Add summary
                 if self.summary_flag:
                     tf.summary.histogram('block_output', input_now)
